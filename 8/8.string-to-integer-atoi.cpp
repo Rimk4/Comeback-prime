@@ -139,12 +139,102 @@
  * 
  */
 
+#include <iostream>
+#include <string.h>
+#include <cstring>
+#include <cstdint>
+
+using namespace std;
+
+
 // @lc code=start
-class Solution {
+class Solution
+{
+
 public:
-    int myAtoi(string s) {
+
+    int64_t myAtoi (string s)
+    {
+        auto isDigit = [] (char c) -> bool
+        {
+            return '0' <= c && c <= '9';
+        };
+
+        // Ignore any leading whitespace (" ").
+        size_t firstNonSpaceInd = 0;
+        while (s[firstNonSpaceInd] == ' ' && firstNonSpaceInd < s.length ())
+            firstNonSpaceInd++;
+
+        size_t places = 0;
+        static constexpr uint8_t maxPlacesInt32 = 10;
+        uint8_t digits[maxPlacesInt32];
+        memset (&digits[0], 0, maxPlacesInt32 * sizeof (uint8_t));
         
+        bool isNegative = false;
+        bool nextIsDigit = false;
+        size_t i;
+        for (i = firstNonSpaceInd; i < s.length () && places < maxPlacesInt32; i++)
+        {
+            if (s[i] == '0' && places == 0)
+                continue;
+
+            if (isDigit (s[i]))
+            {
+                digits[places] = s[i] - '0';
+                places++;
+            }
+            else if (s[i] == '-' && i - firstNonSpaceInd == 0)
+                isNegative = true;
+            else if (s[i] == '+' && i - firstNonSpaceInd == 0)
+                continue;
+            else
+                break;
+        }
+        if (i < s.length ())
+            nextIsDigit = isDigit (s[i]);
+
+        if (places == 0)
+            return 0;
+            
+        if ((places == maxPlacesInt32) && nextIsDigit)
+            return (isNegative ? INT32_MIN : INT32_MAX);
+
+        int64_t integer = 0;
+        int64_t tenPower = 1;
+        for (int8_t i = places - 1; i >= 0; i--)
+        {
+            if (isNegative)
+                integer -= digits[i] * tenPower;
+            else
+                integer += digits[i] * tenPower;
+            tenPower *= 10;
+        }
+
+        if (integer > INT32_MAX)
+            return INT32_MAX;
+        
+        if (integer < INT32_MIN)
+            return INT32_MIN;
+
+        return integer;
     }
 };
 // @lc code=end
 
+int main (int argc, char const *argv[])
+{
+    Solution sol;
+
+    cout << "Example 1:" << sol.myAtoi ("42") << endl;
+    cout << "Example 2:" << sol.myAtoi (" -042") << endl;
+    cout << "Example 3:" << sol.myAtoi ("1337c0d3") << endl;
+    cout << "Example 4:" << sol.myAtoi ("0-1") << endl;
+    cout << "Example 5:" << sol.myAtoi ("words and 987") << endl;
+    cout << "Example 6:" << sol.myAtoi ("-91283472332") << endl;
+    cout << "Example 7:" << sol.myAtoi ("+1") << endl;
+    cout << "Example 8:" << sol.myAtoi ("  0000000000012345678") << endl;
+    cout << "Example 9:" << sol.myAtoi ("2147483646") << endl;
+    cout << "Example 0:" << sol.myAtoi ("2147483648") << endl;
+
+    return 0;
+}
